@@ -16,11 +16,8 @@ io.on('connection', (socket) => {
         id: socket.id,
         position: { 'x' : 0 , 'y': 0, 'z': 0 }
     };
-
-    // 클라이언트에게 현재 플레이어 목록 전송
-    socket.emit('currentPlayers', players);
-
     // 다른 클라이언트에게 새 플레이어 정보 전송
+    io.emit('newPlayer', players[socket.id]);
     socket.broadcast.emit('newPlayer', players[socket.id]);
 
     socket.on('playerMovement', (movementData) => {
@@ -28,7 +25,7 @@ io.on('connection', (socket) => {
         players[socket.id].position = movementData.position;
         console.log(players[socket.id].position);
         // 다른 클라이언트에게 플레이어 움직임 정보 전송
-        io.emit('playerMoved', players[socket.id]);
+        socket.broadcast.emit('playerMoved', players[socket.id]);
     });
 
     socket.on('disconnect', () => {

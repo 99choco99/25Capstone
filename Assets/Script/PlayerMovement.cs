@@ -4,9 +4,9 @@ using UnityEngine;
 using SocketIOClient;
 using SocketIOClient.Newtonsoft.Json;
 using System.Collections.Generic;
+using Unity.Netcode;
 
-public class PlayerMovement : MonoBehaviour
-{
+public class PlayerMovement : NetworkBehaviour { 
     PlayerInput playerInput;
     Rigidbody rb;
     SocketIOUnity socket;
@@ -18,14 +18,12 @@ public class PlayerMovement : MonoBehaviour
     {
         playerInput = GetComponent<PlayerInput>();
         rb = GetComponent<Rigidbody>();
-        socket = GameManager.instance.socket;
-        socket.JsonSerializer = new NewtonsoftJsonSerializer();
     }
 
 
     private void Start()
     {
-
+        socket = GameManager.instance.socket;
         // 서버에서 플레이어의 움직임을 수신하는 이벤트 리스너 설정
         socket.On("playerMoved", (data) =>
         {
@@ -39,7 +37,7 @@ public class PlayerMovement : MonoBehaviour
             // Vector3로 변환
             Vector3 position = new Vector3(positionData.x, positionData.y, positionData.z);
             // 플레이어의 위치를 업데이트하는 함수 호출
-            UpdatePlayerPosition(playerId,position);
+           // UpdatePlayerPosition(playerId,position);
         });
     }
     // Update is called once per frame
@@ -52,8 +50,8 @@ public class PlayerMovement : MonoBehaviour
     {
         moveDistance = new Vector3(playerInput.moveHorizontal, 0, playerInput.moveVertical);
         moveDistance = rb.transform.position + moveDistance.normalized * moveSpeed * Time.deltaTime;
-        rb.MovePosition(moveDistance);
         SendPlayerMovement(moveDistance);
+        rb.MovePosition(moveDistance);
     }
 
     private void SendPlayerMovement(Vector3 movement)
