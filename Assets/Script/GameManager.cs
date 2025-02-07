@@ -10,7 +10,6 @@ public class GameManager : MonoBehaviour
     public SocketIOUnity socket;
     public GameObject playerPrefab;
 
-
     private void Awake()
     {
         if (instance == null)
@@ -22,22 +21,23 @@ public class GameManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
-        socket = new SocketIOUnity("http://localhost:3333");
-
-        socket.Connect();
-
+        // Add Client Events    // On Connected
     }
 
     void Start()
     {
-        socket.JsonSerializer = new NewtonsoftJsonSerializer();
-        socket.On("newPlayer", (id) =>
-        {
-            Debug.Log("실행");
+        socket.Connect();
+        socket.On("connect", e => {
+            Debug.Log("서버에 연결됨");
         });
-
+        socket.JsonSerializer = new NewtonsoftJsonSerializer();
+        socket.On("newPlayer", (e) => {
+            Debug.Log(socket.Id);
+            socket.Emit("Complete"); 
+        });
     }
-    
+
+
 
 
 }

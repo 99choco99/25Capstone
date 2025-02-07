@@ -5,11 +5,13 @@ using SocketIOClient;
 using SocketIOClient.Newtonsoft.Json;
 using System.Collections.Generic;
 using Unity.Netcode;
+using UnityEngine.UIElements;
 
 public class PlayerMovement : NetworkBehaviour { 
     PlayerInput playerInput;
     Rigidbody rb;
-    SocketIOUnity socket;
+    public SocketIOUnity socket;
+    public GameObject player;
 
     public float moveSpeed;
     Vector3 moveDistance;
@@ -23,7 +25,13 @@ public class PlayerMovement : NetworkBehaviour {
 
     private void Start()
     {
-        socket = GameManager.instance.socket;
+        socket = new SocketIOUnity("http://localhost:3333");
+        socket.Connect();
+        socket.JsonSerializer = new NewtonsoftJsonSerializer();
+        Debug.Log(socket.Id);
+        socket.Emit("test");
+        socket.On("anw", (e) => { Debug.Log("받음"); });
+        //player.GetComponent<NetworkObject>().Spawn();
         // 서버에서 플레이어의 움직임을 수신하는 이벤트 리스너 설정
         socket.On("playerMoved", (data) =>
         {
@@ -37,9 +45,10 @@ public class PlayerMovement : NetworkBehaviour {
             // Vector3로 변환
             Vector3 position = new Vector3(positionData.x, positionData.y, positionData.z);
             // 플레이어의 위치를 업데이트하는 함수 호출
-           // UpdatePlayerPosition(playerId,position);
+            UpdatePlayerPosition(playerId, position);
         });
     }
+
     // Update is called once per frame
     void FixedUpdate()
     {
@@ -48,10 +57,10 @@ public class PlayerMovement : NetworkBehaviour {
 
     void Move()
     {
-        moveDistance = new Vector3(playerInput.moveHorizontal, 0, playerInput.moveVertical);
-        moveDistance = rb.transform.position + moveDistance.normalized * moveSpeed * Time.deltaTime;
-        SendPlayerMovement(moveDistance);
-        rb.MovePosition(moveDistance);
+            moveDistance = new Vector3(playerInput.moveHorizontal, 0, playerInput.moveVertical);
+            moveDistance = rb.transform.position + moveDistance.normalized * moveSpeed * Time.deltaTime;
+            SendPlayerMovement(moveDistance);
+            rb.MovePosition(moveDistance);
     }
 
     private void SendPlayerMovement(Vector3 movement)
@@ -66,8 +75,12 @@ public class PlayerMovement : NetworkBehaviour {
     private void UpdatePlayerPosition(string playerId, Vector3 position)
     {
         // 플레이어 오브젝트를 찾고 위치를 업데이트하는 로직 추가
-        Debug.Log($"플레이어 {playerId}의 위치를 업데이트: {position}");
+        //Debug.Log($"플레이어 {playerId}의 위치를 업데이트: {position}");
         // 여기서 실제로 플레이어 오브젝트의 위치를 업데이트하는 코드를 작성합니다.
+        if(playerId != socket.Id)
+        {
+            rb.MovePosition(position);
+        }
     }
 
 }
